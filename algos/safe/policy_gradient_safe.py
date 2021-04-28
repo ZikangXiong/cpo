@@ -15,8 +15,8 @@ import rllab.misc.logger as logger
 import theano
 import theano.tensor as TT
 
+from ...algos.safe.sampler_safe import BatchSamplerSafe
 
-from sandbox.cpo.algos.safe.sampler_safe import BatchSamplerSafe
 
 class PolicyGradientSafe(BatchPolopt, Serializable):
     """
@@ -76,7 +76,6 @@ class PolicyGradientSafe(BatchPolopt, Serializable):
             IS_coeff_lower_bound=0,
             **kwargs):
 
-
         """
         :param batch_aggregate_n: use this many epochs of data (including current)
         :param batch_aggregate_coeff: used to make contribution of old data smaller. formula:
@@ -110,30 +109,30 @@ class PolicyGradientSafe(BatchPolopt, Serializable):
         self.safety_constrained_optimizer = safety_constrained_optimizer
         self.safety_constraint = safety_constraint
         self.safety_step_size = self.safety_constraint.get_safety_step()
-        assert(safety_key in ['rewards','returns','advantages'])
-        if safety_key == 'advantages' and not(hasattr(self.safety_constraint,'baseline')):
+        assert (safety_key in ['rewards', 'returns', 'advantages'])
+        if safety_key == 'advantages' and not (hasattr(self.safety_constraint, 'baseline')):
             logger.log("Warning: selected advantages as safety key without providing baseline.")
             logger.log("Falling back on returns as safety key.")
             safety_key = 'returns'
-        self.safety_key = 'safety_'+safety_key
+        self.safety_key = 'safety_' + safety_key
         self.safety_discount = safety_discount
         self.safety_gae_lambda = safety_gae_lambda
         self.center_safety_vals = center_safety_vals
         self.robustness_coeff = robustness_coeff
-        self.attempt_feasible_recovery=attempt_feasible_recovery
-        self.attempt_infeasible_recovery=attempt_infeasible_recovery
-        self.revert_to_last_safe_point=revert_to_last_safe_point
+        self.attempt_feasible_recovery = attempt_feasible_recovery
+        self.attempt_infeasible_recovery = attempt_infeasible_recovery
+        self.revert_to_last_safe_point = revert_to_last_safe_point
 
         # safety tradeoff
         self.safety_tradeoff = safety_tradeoff
-        self.safety_tradeoff_coeff = 1. * safety_tradeoff_coeff 
+        self.safety_tradeoff_coeff = 1. * safety_tradeoff_coeff
         self.learn_safety_tradeoff_coeff = learn_safety_tradeoff_coeff
         self.safety_tradeoff_coeff_lr = safety_tradeoff_coeff_lr
-        self.pdo_vf_mode = pdo_vf_mode      #1 = one VF for R + alpha*S 
-                                            #2 = two VFs (one for R, one for S)
-                                            #Experiments in the paper use mode 1,
-                                            #although I tried out both. 
-                                            #(Mode 2 seemed less stable.)
+        self.pdo_vf_mode = pdo_vf_mode  # 1 = one VF for R + alpha*S
+        # 2 = two VFs (one for R, one for S)
+        # Experiments in the paper use mode 1,
+        # although I tried out both.
+        # (Mode 2 seemed less stable.)
 
         # entropy regularization
         self.entropy_regularize = entropy_regularize
@@ -157,14 +156,13 @@ class PolicyGradientSafe(BatchPolopt, Serializable):
         self.batch_aggregate_coeff = batch_aggregate_coeff
         self.relative_weights = relative_weights
 
-        super(PolicyGradientSafe, self).__init__(optimizer=optimizer, 
+        super(PolicyGradientSafe, self).__init__(optimizer=optimizer,
                                                  sampler_cls=BatchSamplerSafe,
                                                  **kwargs)
 
         # safety tradeoff
         if self.safety_constraint and self.safety_tradeoff and self.pdo_vf_mode == 1:
             self.baseline._target_key = 'tradeoff_returns'
-        
 
     @overrides
     def init_opt(self):
@@ -189,7 +187,6 @@ class PolicyGradientSafe(BatchPolopt, Serializable):
                 ndim=1 + is_recurrent,
                 dtype=theano.config.floatX
             )
-            
 
         weights_var = ext.new_tensor(
             'weights',
@@ -203,7 +200,7 @@ class PolicyGradientSafe(BatchPolopt, Serializable):
                 ndim=2 + is_recurrent,
                 dtype=theano.config.floatX
             ) for k in dist.dist_info_keys
-            }
+        }
         old_dist_info_vars_list = [old_dist_info_vars[k] for k in dist.dist_info_keys]
 
         state_info_vars = {
@@ -223,10 +220,10 @@ class PolicyGradientSafe(BatchPolopt, Serializable):
         dist_info_vars = self.policy.dist_info_sym(obs_var, state_info_vars)
 
         self.dist_info_vars_func = ext.compile_function(
-                inputs=[obs_var] + state_info_vars_list,
-                outputs=dist_info_vars,
-                log_name="dist_info_vars"
-            )
+            inputs=[obs_var] + state_info_vars_list,
+            outputs=dist_info_vars,
+            log_name="dist_info_vars"
+        )
 
         # when we want to get D_KL( pi' || pi) for data that was sampled on 
         # some behavior policy pi_b, where pi' is the optimization variable
@@ -260,13 +257,12 @@ class PolicyGradientSafe(BatchPolopt, Serializable):
             self.safety_gradient_rescale = theano.shared(1.)
             f_safety = self.safety_gradient_rescale * f_safety
 
-
         input_list = [
-                         obs_var,
-                         action_var,
-                         advantage_var,
-                         weights_var,
-                     ]
+            obs_var,
+            action_var,
+            advantage_var,
+            weights_var,
+        ]
 
         if self.safety_constraint:
             input_list.append(safety_var)
@@ -275,8 +271,7 @@ class PolicyGradientSafe(BatchPolopt, Serializable):
         if is_recurrent:
             input_list.append(valid_var)
 
-
-        if not(self.safety_constrained_optimizer):
+        if not (self.safety_constrained_optimizer):
             self.optimizer.update_opt(
                 loss=surr_loss,
                 target=self.policy,
@@ -300,7 +295,6 @@ class PolicyGradientSafe(BatchPolopt, Serializable):
                 revert_to_last_safe_point=self.revert_to_last_safe_point
             )
 
-
         f_kl = ext.compile_function(
             inputs=input_list,
             outputs=[mean_kl, max_kl],
@@ -309,17 +303,15 @@ class PolicyGradientSafe(BatchPolopt, Serializable):
             f_kl=f_kl,
         )
 
-
-
     @overrides
     def optimize_policy(self, itr, samples_data):
         logger.log('optimizing policy...')
         all_input_values = tuple(ext.extract(
             samples_data,
             "observations", "actions", "advantages", "weights"
-            ))
+        ))
         if self.safety_constraint:
-            all_input_values += tuple(ext.extract(samples_data,"safety_values"))
+            all_input_values += tuple(ext.extract(samples_data, "safety_values"))
             self.safety_gradient_rescale.set_value(samples_data['safety_rescale'])
             logger.record_tabular('SafetyGradientRescale', self.safety_gradient_rescale.get_value())
             """
@@ -351,48 +343,45 @@ class PolicyGradientSafe(BatchPolopt, Serializable):
             all_input_values += (samples_data["valids"],)
         loss_before = self.optimizer.loss(all_input_values)
 
-
-        if not(self.safety_constrained_optimizer):
+        if not (self.safety_constrained_optimizer):
             self.optimizer.optimize(all_input_values)
         else:
-            threshold = max(self.safety_step_size - samples_data['safety_eval'],0)
+            threshold = max(self.safety_step_size - samples_data['safety_eval'], 0)
             if 'advantage' in self.safety_key:
                 std_adv = np.std(samples_data["safety_values"])
-                logger.record_tabular('StdSafetyAdv',std_adv)
-                threshold = max(threshold - self.robustness_coeff*std_adv,0)
-            
+                logger.record_tabular('StdSafetyAdv', std_adv)
+                threshold = max(threshold - self.robustness_coeff * std_adv, 0)
+
             if 'safety_offset' in samples_data:
-                logger.record_tabular('SafetyOffset',samples_data['safety_offset'])
+                logger.record_tabular('SafetyOffset', samples_data['safety_offset'])
 
             self.optimizer.optimize(all_input_values,
-                    precomputed_eval = samples_data['safety_eval'],
-                    precomputed_threshold = threshold,
-                    diff_threshold=True)
+                                    precomputed_eval=samples_data['safety_eval'],
+                                    precomputed_threshold=threshold,
+                                    diff_threshold=True)
 
         mean_kl, max_kl = self.opt_info['f_kl'](*all_input_values)
         loss_after = self.optimizer.loss(all_input_values)
 
-        if self.entropy_regularize and not(self.entropy_coeff_decay == 1):
+        if self.entropy_regularize and not (self.entropy_coeff_decay == 1):
             current_entropy_coeff = self.entropy_beta.get_value() * self.entropy_coeff_decay
             self.entropy_beta.set_value(current_entropy_coeff)
             logger.record_tabular('EntropyCoeff', current_entropy_coeff)
 
-
         if self.learn_safety_tradeoff_coeff:
             delta = samples_data['safety_eval'] - self.safety_step_size
-            logger.record_tabular('TradeoffCoeffBefore',self.safety_tradeoff_coeff)
+            logger.record_tabular('TradeoffCoeffBefore', self.safety_tradeoff_coeff)
             self.safety_tradeoff_coeff += self.safety_tradeoff_coeff_lr * delta
             self.safety_tradeoff_coeff = max(0, self.safety_tradeoff_coeff)
-            logger.record_tabular('TradeoffCoeffAfter',self.safety_tradeoff_coeff)
-            
-        logger.record_tabular('Time',time.time() - self.start_time)
+            logger.record_tabular('TradeoffCoeffAfter', self.safety_tradeoff_coeff)
+
+        logger.record_tabular('Time', time.time() - self.start_time)
         logger.record_tabular('LossBefore', loss_before)
         logger.record_tabular('LossAfter', loss_after)
         logger.record_tabular('MeanKL', mean_kl)
         logger.record_tabular('MaxKL', max_kl)
         logger.record_tabular('dLoss', loss_before - loss_after)
         logger.log('optimization finished')
-
 
     @overrides
     def get_itr_snapshot(self, itr, samples_data):

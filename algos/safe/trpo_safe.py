@@ -1,8 +1,8 @@
-from sandbox.cpo.algos.safe.policy_gradient_safe import PolicyGradientSafe
-from sandbox.cpo.optimizers.conjugate_constraint_optimizer import ConjugateConstraintOptimizer
-from sandbox.cpo.optimizers.conjugate_gradient_optimizer import ConjugateGradientOptimizer
+from .policy_gradient_safe import PolicyGradientSafe
+from ...optimizers.conjugate_constraint_optimizer import ConjugateConstraintOptimizer
+from ...optimizers.conjugate_gradient_optimizer import ConjugateGradientOptimizer
 from rllab.core.serializable import Serializable
-from sandbox.cpo.safety_constraints.trivial import TrivialSafetyConstraint
+from ...safety_constraints.trivial import TrivialSafetyConstraint
 
 
 class TRPO(PolicyGradientSafe, Serializable):
@@ -25,7 +25,7 @@ class TRPO(PolicyGradientSafe, Serializable):
                 optimizer = ConjugateConstraintOptimizer(**optimizer_args)
             else:
                 optimizer = ConjugateGradientOptimizer(**optimizer_args)
-        super(TRPO, self).__init__(optimizer=optimizer, 
+        super(TRPO, self).__init__(optimizer=optimizer,
                                    safety_constrained_optimizer=safety_constrained_optimizer,
                                    safety_constraint=safety_constraint,
                                    **kwargs)

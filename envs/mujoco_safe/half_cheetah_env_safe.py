@@ -1,10 +1,10 @@
 from rllab.core.serializable import Serializable
 from rllab.envs.mujoco.half_cheetah_env import HalfCheetahEnv
-from sandbox.cpo.envs.mujoco_safe.mujoco_env_safe import SafeMujocoEnv
+from .mujoco_env_safe import SafeMujocoEnv
 import numpy as np
 
-class SafeHalfCheetahEnv(SafeMujocoEnv, Serializable):
 
+class SafeHalfCheetahEnv(SafeMujocoEnv, Serializable):
     MODEL_CLASS = HalfCheetahEnv
 
     """
@@ -15,6 +15,7 @@ class SafeHalfCheetahEnv(SafeMujocoEnv, Serializable):
             self.wrapped_env.get_body_com("torso").flat,
         ])
     """
+
 
 """
 import os.path as osp

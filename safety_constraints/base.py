@@ -22,4 +22,3 @@ class SafetyConstraint(object):
 
     def get_safety_step(self):
         return self.max_value
-

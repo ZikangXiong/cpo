@@ -8,7 +8,6 @@ from rllab.misc import logger
 
 
 class AntEnv(MujocoEnv, Serializable):
-
     FILE = 'ant.xml'
 
     def __init__(self, *args, **kwargs):
@@ -29,14 +28,14 @@ class AntEnv(MujocoEnv, Serializable):
         lb, ub = self.action_bounds
         scaling = (ub - lb) * 0.5
         ctrl_cost = 0.5 * 1e-2 * np.sum(np.square(action / scaling))
-        #contact_cost = 0.5 * 1e-3 * np.sum(
+        # contact_cost = 0.5 * 1e-3 * np.sum(
         #    np.square(np.clip(self.model.data.cfrc_ext, -1, 1))),
         contact_cost = 0
         survive_reward = 0.05
         reward = forward_reward - ctrl_cost - contact_cost + survive_reward
         state = self._state
         notdone = np.isfinite(state).all() \
-            and state[2] >= 0.2 and state[2] <= 1.0
+                  and state[2] >= 0.2 and state[2] <= 1.0
         done = not notdone
         ob = self.get_current_obs()
         return Step(ob, float(reward), done)
@@ -51,4 +50,3 @@ class AntEnv(MujocoEnv, Serializable):
         logger.record_tabular('MaxForwardProgress', np.max(progs))
         logger.record_tabular('MinForwardProgress', np.min(progs))
         logger.record_tabular('StdForwardProgress', np.std(progs))
-

@@ -165,18 +165,17 @@ class ConjugateConstraintOptimizer(Serializable):
             hvp_approach = PerlmutterHvp(num_slices)
         self._hvp_approach = hvp_approach
 
-
-    def update_opt(self, loss, target, quad_leq_constraint, lin_leq_constraint, inputs, 
-                    extra_inputs=None, 
-                    constraint_name_1="quad_constraint",
-                    constraint_name_2="lin_constraint", 
-                    using_surrogate=False,
-                    true_linear_leq_constraint=None,
-                    precompute=False,
-                    attempt_feasible_recovery=False,
-                    attempt_infeasible_recovery=False,
-                    revert_to_last_safe_point=False,
-                    *args, **kwargs):
+    def update_opt(self, loss, target, quad_leq_constraint, lin_leq_constraint, inputs,
+                   extra_inputs=None,
+                   constraint_name_1="quad_constraint",
+                   constraint_name_2="lin_constraint",
+                   using_surrogate=False,
+                   true_linear_leq_constraint=None,
+                   precompute=False,
+                   attempt_feasible_recovery=False,
+                   attempt_infeasible_recovery=False,
+                   revert_to_last_safe_point=False,
+                   *args, **kwargs):
         """
         :param loss: Symbolic expression for the loss function.
         :param target: A parameterized object to optimize over. It should implement methods of the
@@ -254,10 +253,10 @@ class ConjugateConstraintOptimizer(Serializable):
         lin_constraint_grads = theano.grad(constraint_term_2, wrt=params, disconnected_inputs='warn')
         flat_lin_constraint_grad = ext.flatten_tensor_variables(lin_constraint_grads)
 
-        if using_surrogate and not(precompute):
+        if using_surrogate and not (precompute):
             constraint_term_2 = true_linear_leq_constraint
 
-        self._hvp_approach.update_opt(f=constraint_term_1, target=target, 
+        self._hvp_approach.update_opt(f=constraint_term_1, target=target,
                                       inputs=inputs + extra_inputs,
                                       reg_coeff=self._reg_coeff)
 
@@ -316,16 +315,16 @@ class ConjugateConstraintOptimizer(Serializable):
             extra_inputs = tuple()
         return sliced_fun(self._opt_fun["f_constraint"], self._num_slices)(inputs, extra_inputs)
 
-    def optimize(self, 
-                 inputs, 
-                 extra_inputs=None, 
-                 subsample_grouped_inputs=None, 
-                 precomputed_eval=None, 
+    def optimize(self,
+                 inputs,
+                 extra_inputs=None,
+                 subsample_grouped_inputs=None,
+                 precomputed_eval=None,
                  precomputed_threshold=None,
                  diff_threshold=False,
                  inputs2=None,
                  extra_inputs2=None,
-                ):
+                 ):
 
         """
         precomputed_eval         :  The value of the safety constraint at theta = theta_old. 
@@ -357,7 +356,7 @@ class ConjugateConstraintOptimizer(Serializable):
         if extra_inputs2 is None:
             extra_inputs2 = tuple()
 
-        def subsampled_inputs(inputs,subsample_grouped_inputs):
+        def subsampled_inputs(inputs, subsample_grouped_inputs):
             if self._subsample_factor < 1:
                 if subsample_grouped_inputs is None:
                     subsample_grouped_inputs = [inputs]
@@ -371,9 +370,9 @@ class ConjugateConstraintOptimizer(Serializable):
                 subsample_inputs = inputs
             return subsample_inputs
 
-        subsample_inputs = subsampled_inputs(inputs,subsample_grouped_inputs)
+        subsample_inputs = subsampled_inputs(inputs, subsample_grouped_inputs)
         if self._resample_inputs:
-            subsample_inputs2 = subsampled_inputs(inputs,subsample_grouped_inputs)
+            subsample_inputs2 = subsampled_inputs(inputs, subsample_grouped_inputs)
 
         logger.log("computing loss before")
         loss_before = sliced_fun(self._opt_fun["f_loss"], self._num_slices)(
@@ -390,21 +389,21 @@ class ConjugateConstraintOptimizer(Serializable):
         v = krylov.cg(Hx, flat_g, cg_iters=self._cg_iters, verbose=self._verbose_cg)
 
         approx_g = Hx(v)
-        q = v.dot(approx_g) # approx = g^T H^{-1} g
+        q = v.dot(approx_g)  # approx = g^T H^{-1} g
         delta = 2 * self._max_quad_constraint_val
- 
+
         eps = 1e-8
 
         residual = np.sqrt((approx_g - flat_g).dot(approx_g - flat_g))
-        rescale  = q / (v.dot(v))
-        logger.record_tabular("OptimDiagnostic_Residual",residual)
+        rescale = q / (v.dot(v))
+        logger.record_tabular("OptimDiagnostic_Residual", residual)
         logger.record_tabular("OptimDiagnostic_Rescale", rescale)
 
         if self.precompute:
             S = precomputed_eval
-            assert(np.ndim(S)==0) # please be a scalar
+            assert (np.ndim(S) == 0)  # please be a scalar
         else:
-            S = sliced_fun(self._opt_fun["lin_constraint"], self._num_slices)(inputs, extra_inputs) 
+            S = sliced_fun(self._opt_fun["lin_constraint"], self._num_slices)(inputs, extra_inputs)
 
         c = S - self._max_lin_constraint_val
         if c > 0:
@@ -417,13 +416,13 @@ class ConjugateConstraintOptimizer(Serializable):
         # require premature stopping of optimization process)
         stop_flag = False
 
-        if flat_b.dot(flat_b) <= eps :
+        if flat_b.dot(flat_b) <= eps:
             # if safety gradient is zero, linear constraint is not present;
             # ignore its implementation.
             lam = np.sqrt(q / delta)
             nu = 0
             w = 0
-            r,s,A,B = 0,0,0,0
+            r, s, A, B = 0, 0, 0, 0
             optim_case = 4
         else:
             if self._resample_inputs:
@@ -433,17 +432,17 @@ class ConjugateConstraintOptimizer(Serializable):
             unit_b = flat_b / norm_b
             w = norm_b * krylov.cg(Hx, unit_b, cg_iters=self._cg_iters, verbose=self._verbose_cg)
 
-            r = w.dot(approx_g) # approx = b^T H^{-1} g
-            s = w.dot(Hx(w))    # approx = b^T H^{-1} b
+            r = w.dot(approx_g)  # approx = b^T H^{-1} g
+            s = w.dot(Hx(w))  # approx = b^T H^{-1} b
 
             # figure out lambda coeff (lagrange multiplier for trust region)
             # and nu coeff (lagrange multiplier for linear constraint)
-            A = q - r**2 / s                # this should always be positive by Cauchy-Schwarz
-            B = delta - c**2 / s            # this one says whether or not the closest point on the plane is feasible
+            A = q - r ** 2 / s  # this should always be positive by Cauchy-Schwarz
+            B = delta - c ** 2 / s  # this one says whether or not the closest point on the plane is feasible
 
             # if (B < 0), that means the trust region plane doesn't intersect the safety boundary
 
-            if c <0 and B < 0:
+            if c < 0 and B < 0:
                 # point in trust region is feasible and safety boundary doesn't intersect
                 # ==> entire trust region is feasible
                 optim_case = 3
@@ -459,7 +458,8 @@ class ConjugateConstraintOptimizer(Serializable):
                 if self.attempt_feasible_recovery:
                     logger.log("alert! conjugate constraint optimizer is attempting feasible recovery")
                 else:
-                    logger.log("alert! problem is feasible but needs recovery, and we were instructed not to attempt recovery")
+                    logger.log(
+                        "alert! problem is feasible but needs recovery, and we were instructed not to attempt recovery")
                     stop_flag = True
             else:
                 # x = 0 infeasible (bad! unsafe!) and safety boundary doesn't intersect
@@ -472,12 +472,11 @@ class ConjugateConstraintOptimizer(Serializable):
                     logger.log("alert! problem is infeasible, and we were instructed not to attempt recovery")
                     stop_flag = True
 
-
             # default dual vars, which assume safety constraint inactive
             # (this corresponds to either optim_case == 3,
             #  or optim_case == 2 under certain conditions)
             lam = np.sqrt(q / delta)
-            nu  = 0
+            nu = 0
 
             if optim_case == 2 or optim_case == 1:
 
@@ -495,34 +494,34 @@ class ConjugateConstraintOptimizer(Serializable):
                 L_mid = - 0.5 * (q / lam_mid + lam_mid * delta)
 
                 lam_a = np.sqrt(A / (B + eps))
-                L_a = -np.sqrt(A*B) - r*c / (s + eps)                 
+                L_a = -np.sqrt(A * B) - r * c / (s + eps)
                 # note that for optim_case == 1 or 2, B > 0, so this calculation should never be an issue
 
                 lam_b = np.sqrt(q / delta)
                 L_b = -np.sqrt(q * delta)
 
-                #those lam's are solns to the pieces of piecewise continuous dual function.
-                #the domains of the pieces depend on whether or not c < 0 (x=0 feasible),
-                #and so projection back on to those domains is determined appropriately.
+                # those lam's are solns to the pieces of piecewise continuous dual function.
+                # the domains of the pieces depend on whether or not c < 0 (x=0 feasible),
+                # and so projection back on to those domains is determined appropriately.
                 if lam_mid > 0:
                     if c < 0:
                         # here, domain of (a) is [0, lam_mid)
                         # and domain of (b) is (lam_mid, infty)
                         if lam_a > lam_mid:
                             lam_a = lam_mid
-                            L_a   = L_mid
+                            L_a = L_mid
                         if lam_b < lam_mid:
                             lam_b = lam_mid
-                            L_b   = L_mid
+                            L_b = L_mid
                     else:
                         # here, domain of (a) is (lam_mid, infty)
                         # and domain of (b) is [0, lam_mid)
                         if lam_a < lam_mid:
                             lam_a = lam_mid
-                            L_a   = L_mid
+                            L_a = L_mid
                         if lam_b > lam_mid:
                             lam_b = lam_mid
-                            L_b   = L_mid
+                            L_b = L_mid
 
                     if L_a >= L_b:
                         lam = lam_a
@@ -538,27 +537,24 @@ class ConjugateConstraintOptimizer(Serializable):
                 nu = max(0, lam * c - r) / (s + eps)
 
         logger.record_tabular("OptimCase", optim_case)  # 4 / 3: trust region totally in safe region; 
-                                                        # 2 : trust region partly intersects safe region, and current point is feasible
-                                                        # 1 : trust region partly intersects safe region, and current point is infeasible
-                                                        # 0 : trust region does not intersect safe region
-        logger.record_tabular("LagrangeLamda", lam) # dual variable for trust region
-        logger.record_tabular("LagrangeNu", nu)     # dual variable for safety constraint
-        logger.record_tabular("OptimDiagnostic_q",q) # approx = g^T H^{-1} g
-        logger.record_tabular("OptimDiagnostic_r",r) # approx = b^T H^{-1} g
-        logger.record_tabular("OptimDiagnostic_s",s) # approx = b^T H^{-1} b
-        logger.record_tabular("OptimDiagnostic_c",c) # if > 0, constraint is violated
-        logger.record_tabular("OptimDiagnostic_A",A) 
-        logger.record_tabular("OptimDiagnostic_B",B)
-        logger.record_tabular("OptimDiagnostic_S",S)
+        # 2 : trust region partly intersects safe region, and current point is feasible
+        # 1 : trust region partly intersects safe region, and current point is infeasible
+        # 0 : trust region does not intersect safe region
+        logger.record_tabular("LagrangeLamda", lam)  # dual variable for trust region
+        logger.record_tabular("LagrangeNu", nu)  # dual variable for safety constraint
+        logger.record_tabular("OptimDiagnostic_q", q)  # approx = g^T H^{-1} g
+        logger.record_tabular("OptimDiagnostic_r", r)  # approx = b^T H^{-1} g
+        logger.record_tabular("OptimDiagnostic_s", s)  # approx = b^T H^{-1} b
+        logger.record_tabular("OptimDiagnostic_c", c)  # if > 0, constraint is violated
+        logger.record_tabular("OptimDiagnostic_A", A)
+        logger.record_tabular("OptimDiagnostic_B", B)
+        logger.record_tabular("OptimDiagnostic_S", S)
         if nu == 0:
             logger.log("safety constraint is not active!")
 
-
-
         # Predict worst-case next S
         nextS = S + np.sqrt(delta * s)
-        logger.record_tabular("OptimDiagnostic_WorstNextS",nextS)
-
+        logger.record_tabular("OptimDiagnostic_WorstNextS", nextS)
 
         # for cases where we will not attempt recovery, we stop here. we didn't stop earlier
         # because first we wanted to record the various critical quantities for understanding the failure mode
@@ -570,9 +566,8 @@ class ConjugateConstraintOptimizer(Serializable):
             logger.record_tabular("QuadRejects", 0)
             logger.record_tabular("LinRejects", 0)
 
-
         if optim_case > 0:
-            flat_descent_step = (1. / (lam + eps) ) * ( v + nu * w )
+            flat_descent_step = (1. / (lam + eps)) * (v + nu * w)
         else:
             # current default behavior for attempting infeasible recovery:
             # take a step on natural safety gradient
@@ -584,15 +579,14 @@ class ConjugateConstraintOptimizer(Serializable):
 
         prev_lin_constraint_val = sliced_fun(
             self._opt_fun["f_lin_constraint"], self._num_slices)(inputs, extra_inputs)
-        logger.record_tabular("PrevLinConstVal",prev_lin_constraint_val)
+        logger.record_tabular("PrevLinConstVal", prev_lin_constraint_val)
 
         lin_reject_threshold = self._max_lin_constraint_val
         if precomputed_threshold is not None:
             lin_reject_threshold = precomputed_threshold
         if diff_threshold:
             lin_reject_threshold += prev_lin_constraint_val
-        logger.record_tabular("LinRejectThreshold",lin_reject_threshold)
-
+        logger.record_tabular("LinRejectThreshold", lin_reject_threshold)
 
         def check_nan():
             loss, quad_constraint_val, lin_constraint_val = sliced_fun(
@@ -612,7 +606,7 @@ class ConjugateConstraintOptimizer(Serializable):
         def line_search(check_loss=True, check_quad=True, check_lin=True):
             loss_rejects = 0
             quad_rejects = 0
-            lin_rejects  = 0
+            lin_rejects = 0
             n_iter = 0
             for n_iter, ratio in enumerate(self._backtrack_ratio ** np.arange(self._max_backtracks)):
                 cur_step = ratio * flat_descent_step
@@ -622,20 +616,23 @@ class ConjugateConstraintOptimizer(Serializable):
                     self._opt_fun["f_loss_constraint"], self._num_slices)(inputs, extra_inputs)
                 loss_flag = loss < loss_before
                 quad_flag = quad_constraint_val <= self._max_quad_constraint_val
-                lin_flag  = lin_constraint_val  <= lin_reject_threshold
-                if check_loss and not(loss_flag):
+                lin_flag = lin_constraint_val <= lin_reject_threshold
+                if check_loss and not (loss_flag):
                     logger.log("At backtrack itr %i, loss failed to improve." % n_iter)
                     loss_rejects += 1
-                if check_quad and not(quad_flag):
+                if check_quad and not (quad_flag):
                     logger.log("At backtrack itr %i, quad constraint violated." % n_iter)
-                    logger.log("Quad constraint violation was %.3f %%." % (100*(quad_constraint_val / self._max_quad_constraint_val) - 100))
+                    logger.log("Quad constraint violation was %.3f %%." % (
+                            100 * (quad_constraint_val / self._max_quad_constraint_val) - 100))
                     quad_rejects += 1
-                if check_lin and not(lin_flag):
+                if check_lin and not (lin_flag):
                     logger.log("At backtrack itr %i, expression for lin constraint failed to improve." % n_iter)
-                    logger.log("Lin constraint violation was %.3f %%." % (100*(lin_constraint_val / lin_reject_threshold) - 100))
+                    logger.log("Lin constraint violation was %.3f %%." % (
+                            100 * (lin_constraint_val / lin_reject_threshold) - 100))
                     lin_rejects += 1
 
-                if (loss_flag or not(check_loss)) and (quad_flag or not(check_quad)) and (lin_flag or not(check_lin)):
+                if (loss_flag or not (check_loss)) and (quad_flag or not (check_quad)) and (
+                        lin_flag or not (check_lin)):
                     logger.log("Accepted step at backtrack itr %i." % n_iter)
                     break
 
@@ -645,55 +642,54 @@ class ConjugateConstraintOptimizer(Serializable):
             logger.record_tabular("LinRejects", lin_rejects)
             return loss, quad_constraint_val, lin_constraint_val, n_iter
 
-
         def wrap_up():
             if optim_case < 4:
                 lin_constraint_val = sliced_fun(
                     self._opt_fun["f_lin_constraint"], self._num_slices)(inputs, extra_inputs)
                 lin_constraint_delta = lin_constraint_val - prev_lin_constraint_val
-                logger.record_tabular("LinConstraintDelta",lin_constraint_delta)
+                logger.record_tabular("LinConstraintDelta", lin_constraint_delta)
 
                 cur_param = self._target.get_param_values()
-                
+
                 next_linear_S = S + flat_b.dot(cur_param - prev_param)
                 next_surrogate_S = S + lin_constraint_delta
 
-                lin_surrogate_acc = 100.*(next_linear_S - next_surrogate_S) / next_surrogate_S
+                lin_surrogate_acc = 100. * (next_linear_S - next_surrogate_S) / next_surrogate_S
 
-                logger.record_tabular("PredictedLinearS",next_linear_S)
-                logger.record_tabular("PredictedSurrogateS",next_surrogate_S)
-                logger.record_tabular("LinearSurrogateErr",lin_surrogate_acc)
+                logger.record_tabular("PredictedLinearS", next_linear_S)
+                logger.record_tabular("PredictedSurrogateS", next_surrogate_S)
+                logger.record_tabular("LinearSurrogateErr", lin_surrogate_acc)
 
-
-                lin_pred_err = (self._last_lin_pred_S - S) #/ (S + eps)
-                surr_pred_err = (self._last_surr_pred_S - S) #/ (S + eps)
+                lin_pred_err = (self._last_lin_pred_S - S)  # / (S + eps)
+                surr_pred_err = (self._last_surr_pred_S - S)  # / (S + eps)
                 logger.record_tabular("PredictionErrorLinearS", lin_pred_err)
                 logger.record_tabular("PredictionErrorSurrogateS", surr_pred_err)
                 self._last_lin_pred_S = next_linear_S
                 self._last_surr_pred_S = next_surrogate_S
 
             else:
-                logger.record_tabular("LinConstraintDelta",0)
-                logger.record_tabular("PredictedLinearS",0)
-                logger.record_tabular("PredictedSurrogateS",0)
-                logger.record_tabular("LinearSurrogateErr",0)
+                logger.record_tabular("LinConstraintDelta", 0)
+                logger.record_tabular("PredictedLinearS", 0)
+                logger.record_tabular("PredictedSurrogateS", 0)
+                logger.record_tabular("LinearSurrogateErr", 0)
 
-                lin_pred_err = (self._last_lin_pred_S - 0) #/ (S + eps)
-                surr_pred_err = (self._last_surr_pred_S - 0) #/ (S + eps)
+                lin_pred_err = (self._last_lin_pred_S - 0)  # / (S + eps)
+                surr_pred_err = (self._last_surr_pred_S - 0)  # / (S + eps)
                 logger.record_tabular("PredictionErrorLinearS", lin_pred_err)
                 logger.record_tabular("PredictionErrorSurrogateS", surr_pred_err)
                 self._last_lin_pred_S = 0
                 self._last_surr_pred_S = 0
 
-        if stop_flag==True:
+        if stop_flag == True:
             record_zeros()
             wrap_up()
             return
 
-        if optim_case == 1 and not(self.revert_to_last_safe_point):
+        if optim_case == 1 and not (self.revert_to_last_safe_point):
             if self._linesearch_infeasible_recovery:
-                logger.log("feasible recovery mode: constrained natural gradient step. performing linesearch on constraints.")
-                line_search(False,True,True)
+                logger.log(
+                    "feasible recovery mode: constrained natural gradient step. performing linesearch on constraints.")
+                line_search(False, True, True)
             else:
                 self._target.set_param_values(prev_param - flat_descent_step, trainable=True)
                 logger.log("feasible recovery mode: constrained natural gradient step. no linesearch performed.")
@@ -701,10 +697,10 @@ class ConjugateConstraintOptimizer(Serializable):
             record_zeros()
             wrap_up()
             return
-        elif optim_case == 0 and not(self.revert_to_last_safe_point):
+        elif optim_case == 0 and not (self.revert_to_last_safe_point):
             if self._linesearch_infeasible_recovery:
                 logger.log("infeasible recovery mode: natural safety step. performing linesearch on constraints.")
-                line_search(False,True,True)
+                line_search(False, True, True)
             else:
                 self._target.set_param_values(prev_param - flat_descent_step, trainable=True)
                 logger.log("infeasible recovery mode: natural safety gradient step. no linesearch performed.")
@@ -722,10 +718,9 @@ class ConjugateConstraintOptimizer(Serializable):
             wrap_up()
             return
 
-
         loss, quad_constraint_val, lin_constraint_val, n_iter = line_search()
 
-        if (np.isnan(loss) or np.isnan(quad_constraint_val) or np.isnan(lin_constraint_val) or loss >= loss_before 
+        if (np.isnan(loss) or np.isnan(quad_constraint_val) or np.isnan(lin_constraint_val) or loss >= loss_before
             or quad_constraint_val >= self._max_quad_constraint_val
             or lin_constraint_val > lin_reject_threshold) and not self._accept_violation:
             logger.log("Line search condition violated. Rejecting the step!")
@@ -750,4 +745,3 @@ class ConjugateConstraintOptimizer(Serializable):
         logger.log("computing loss after")
         logger.log("optimization finished")
         wrap_up()
-        

@@ -18,7 +18,6 @@ from rllab.misc.overrides import overrides
 from rllab.mujoco_py import MjViewer, MjModel, mjcore, mjlib, \
     mjextra, glfw
 
-
 from sandbox.cpo.envs.mujoco.point_env import PointEnv
 
 APPLE = 0
@@ -382,6 +381,3 @@ class GatherEnv(Env, Serializable):
 
         logger.record_tabular('AvgApplesCollected', np.mean(apples_collected))
         logger.record_tabular('AvgBombsCollected', np.mean(bombs_collected))
-
-
-

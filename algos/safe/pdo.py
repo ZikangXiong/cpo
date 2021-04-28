@@ -1,5 +1,5 @@
-from sandbox.cpo.algos.safe.policy_gradient_safe import PolicyGradientSafe
-from sandbox.cpo.optimizers.conjugate_gradient_optimizer import ConjugateGradientOptimizer
+from .policy_gradient_safe import PolicyGradientSafe
+from ...optimizers.conjugate_gradient_optimizer import ConjugateGradientOptimizer
 from rllab.core.serializable import Serializable
 import rllab.misc.logger as logger
 
@@ -37,17 +37,17 @@ class PDO(PolicyGradientSafe, Serializable):
         else:
             safety_key = 'advantages'
 
-        if pdo_vf_mode == 2 and not(hasattr(safety_constraint,'baseline')):
+        if pdo_vf_mode == 2 and not (hasattr(safety_constraint, 'baseline')):
             logger.log("Warning: selected two-VF PDO, without providing VF for safety constraint.")
             logger.log("Defaulting to one-VF PDO.")
             pdo_vf_mode = 1
             safety_key = 'returns'
 
-        super(PDO, self).__init__(optimizer=optimizer, 
-                                   safety_constrained_optimizer=False,
-                                   safety_constraint=safety_constraint,
-                                   safety_tradeoff=True,
-                                   learn_safety_tradeoff_coeff=True,
-                                   safety_key=safety_key,
-                                   pdo_vf_mode=pdo_vf_mode,
-                                   **kwargs)
+        super(PDO, self).__init__(optimizer=optimizer,
+                                  safety_constrained_optimizer=False,
+                                  safety_constraint=safety_constraint,
+                                  safety_tradeoff=True,
+                                  learn_safety_tradeoff_coeff=True,
+                                  safety_key=safety_key,
+                                  pdo_vf_mode=pdo_vf_mode,
+                                  **kwargs)

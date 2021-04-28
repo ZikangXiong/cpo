@@ -25,7 +25,7 @@ class GaussianMLPBaseline(Baseline, Parameterized, Serializable):
         self._regressor = GaussianMLPRegressor(
             input_shape=(env_spec.observation_space.flat_dim * num_seq_inputs,),
             output_dim=1,
-            name='vf_'+target_key,
+            name='vf_' + target_key,
             **regressor_args
         )
         self._target_key = target_key

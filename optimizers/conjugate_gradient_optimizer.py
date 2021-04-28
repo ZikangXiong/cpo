@@ -260,8 +260,8 @@ class ConjugateGradientOptimizer(Serializable):
         approx_g = Hx(descent_direction)
         q = descent_direction.dot(approx_g)
         residual = np.sqrt((approx_g - flat_g).dot(approx_g - flat_g))
-        rescale  = q / (descent_direction.dot(descent_direction))
-        logger.record_tabular("OptimDiagnostic_Residual",residual)
+        rescale = q / (descent_direction.dot(descent_direction))
+        logger.record_tabular("OptimDiagnostic_Residual", residual)
         logger.record_tabular("OptimDiagnostic_Rescale", rescale)
 
         initial_step_size = np.sqrt(
@@ -285,7 +285,7 @@ class ConjugateGradientOptimizer(Serializable):
             if loss < loss_before and constraint_val <= self._max_constraint_val:
                 break
         if (np.isnan(loss) or np.isnan(constraint_val) or loss >= loss_before or constraint_val >=
-                self._max_constraint_val) and not self._accept_violation:
+            self._max_constraint_val) and not self._accept_violation:
             logger.log("Line search condition violated. Rejecting the step!")
             if np.isnan(loss):
                 logger.log("Violated because loss is NaN")

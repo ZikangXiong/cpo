@@ -18,7 +18,6 @@ from rllab.misc.overrides import overrides
 from rllab.mujoco_py import MjViewer, MjModel, mjcore, mjlib, \
     mjextra, glfw
 
-
 from sandbox.cpo.envs.mujoco.point_env import PointEnv
 
 APPLE = 0
@@ -45,7 +44,7 @@ class GatherViewer(MjViewer):
         self.red_ball_renderer = EmbeddedViewer()
         self.red_ball_model = red_ball_model
         self.red_ball_renderer.set_model(red_ball_model)
-        #"""
+        # """
         green_ball_highlighted_model = MjModel(osp.abspath(
             osp.join(
                 MODEL_DIR, 'green_ball_highlighted.xml'
@@ -62,7 +61,7 @@ class GatherViewer(MjViewer):
         self.red_ball_highlighted_renderer = EmbeddedViewer()
         self.red_ball_highlighted_model = red_ball_highlighted_model
         self.red_ball_highlighted_renderer.set_model(red_ball_highlighted_model)
-        #"""
+        # """
 
     def start(self):
         super(GatherViewer, self).start()
@@ -85,12 +84,11 @@ class GatherViewer(MjViewer):
         self.green_ball_highlighted_renderer.handle_scroll(window, x_offset, y_offset)
         self.red_ball_highlighted_renderer.handle_scroll(window, x_offset, y_offset)
 
-
     def render(self):
         super(GatherViewer, self).render()
         tmpobjects = mjcore.MJVOBJECTS()
         mjlib.mjlib.mjv_makeObjects(byref(tmpobjects), 1000)
-        
+
         for obj in self.env.objects_in_view:
             x, y, typ = obj
             # print x, y
@@ -111,7 +109,7 @@ class GatherViewer(MjViewer):
                     tmpobjects, self.red_ball_highlighted_renderer.objects)
 
         for obj in self.env.objects:
-            if not(obj in self.env.objects_in_view):
+            if not (obj in self.env.objects_in_view):
                 x, y, typ = obj
                 # print x, y
                 qpos = np.zeros_like(self.green_ball_model.data.qpos)
@@ -376,7 +374,7 @@ class GatherEnv(Env, Serializable):
                 apple_readings[bin_number] = intensity
             else:
                 bomb_readings[bin_number] = intensity
-            self.objects_in_view.append( (ox, oy, typ) )
+            self.objects_in_view.append((ox, oy, typ))
         return apple_readings, bomb_readings
 
     def get_current_obs(self):
@@ -431,6 +429,3 @@ class GatherEnv(Env, Serializable):
 
         logger.record_tabular('AvgApplesCollected', np.mean(apples_collected))
         logger.record_tabular('AvgBombsCollected', np.mean(bombs_collected))
-
-
-

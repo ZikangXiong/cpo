@@ -24,7 +24,7 @@ class GaussianConvBaseline(Baseline, Parameterized, Serializable):
         self._regressor = GaussianConvRegressor(
             input_shape=env_spec.observation_space.shape,
             output_dim=1,
-            name='vf_'+target_key,
+            name='vf_' + target_key,
             **regressor_args
         )
 
